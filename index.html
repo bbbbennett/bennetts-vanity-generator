@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bennett's Vanity Generator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f172a;
+      color: #f1f5f9;
+      min-height: 100vh;
+      padding: 28px 24px;
+      user-select: none;
+    }
+
+    .container { max-width: 740px; margin: 0 auto; }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .logo {
+      width: 44px; height: 44px;
+      background: linear-gradient(135deg, #9945FF 0%, #14F195 100%);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .header-text h1 { font-size: 20px; font-weight: 700; line-height: 1.2; }
+    .header-text p  { font-size: 13px; color: #64748b; margin-top: 2px; }
+    .twitter-link {
+      margin-left: auto;
+      font-size: 13px;
+      color: #64748b;
+      text-decoration: none;
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 12px;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      transition: border-color 0.15s, color 0.15s;
+      flex-shrink: 0;
+    }
+    .twitter-link:hover { border-color: #1d9bf0; color: #1d9bf0; }
+
+    /* ── Cards ── */
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      padding: 22px 24px;
+      margin-bottom: 14px;
+    }
+    .card-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #475569;
+      margin-bottom: 18px;
+    }
+
+    /* ── Pattern inputs ── */
+    .input-row { display: flex; gap: 14px; margin-bottom: 4px; }
+    .field { flex: 1; }
+    label { display: block; font-size: 13px; font-weight: 500; color: #94a3b8; margin-bottom: 6px; }
+
+    input[type="text"] {
+      width: 100%;
+      background: #0f172a;
+      border: 1.5px solid #334155;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 15px;
+      font-family: 'Courier New', monospace;
+      color: #f1f5f9;
+      outline: none;
+      transition: border-color 0.15s;
+      letter-spacing: 0.04em;
+    }
+    input[type="text"]:focus  { border-color: #9945FF; }
+    input[type="text"].error  { border-color: #ef4444; }
+    input[type="text"].ok     { border-color: #14F195; }
+
+    .err-msg {
+      font-size: 11.5px;
+      color: #ef4444;
+      min-height: 18px;
+      margin-top: 4px;
+      padding-left: 2px;
+    }
+
+    .match-preview {
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: #475569;
+      margin-bottom: 16px;
+      padding: 8px 12px;
+      background: #0f172a;
+      border-radius: 8px;
+      display: none;
+    }
+    .match-preview .hl  { color: #9945FF; font-weight: 700; }
+    .match-preview .dim { color: #334155; }
+
+    /* ── Options row ── */
+    .options-row {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .toggle-wrap {
+      display: flex; align-items: center; gap: 9px;
+      cursor: pointer; font-size: 14px; color: #cbd5e1;
+    }
+    .toggle {
+      width: 42px; height: 23px;
+      background: #334155; border-radius: 12px;
+      position: relative; transition: background 0.2s; flex-shrink: 0;
+    }
+    .toggle.on { background: #9945FF; }
+    .toggle::after {
+      content: '';
+      position: absolute;
+      width: 17px; height: 17px;
+      background: white; border-radius: 50%;
+      top: 3px; left: 3px;
+      transition: left 0.2s;
+    }
+    .toggle.on::after { left: 22px; }
+
+    .threads-wrap {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 14px; color: #cbd5e1;
+    }
+    .stepper {
+      display: flex; align-items: center;
+      background: #0f172a; border: 1px solid #334155;
+      border-radius: 8px; overflow: hidden;
+    }
+    .stepper-btn {
+      background: none; border: none;
+      color: #64748b; width: 30px; height: 30px;
+      font-size: 17px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s, color 0.15s;
+    }
+    .stepper-btn:hover:not(:disabled) { background: #1e293b; color: #f1f5f9; }
+    .stepper-btn:disabled { opacity: 0.3; cursor: default; }
+    .stepper-val {
+      font-size: 14px; font-weight: 600;
+      min-width: 26px; text-align: center; color: #f1f5f9;
+    }
+
+    /* ── Difficulty bar ── */
+    .difficulty {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: #0f172a;
+      border-radius: 10px;
+      margin-bottom: 18px;
+    }
+    .diff-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .diff-text { font-size: 12.5px; color: #94a3b8; line-height: 1.4; }
+    .diff-text strong { color: #f1f5f9; }
+
+    /* ── Start / Stop button ── */
+    .main-btn {
+      width: 100%;
+      padding: 13px;
+      border: none;
+      border-radius: 11px;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .main-btn.start {
+      background: linear-gradient(135deg, #9945FF 0%, #14F195 100%);
+      color: white;
+    }
+    .main-btn.stop  { background: #334155; color: #f1f5f9; }
+    .main-btn:hover:not(:disabled) { opacity: 0.88; }
+    .main-btn:active:not(:disabled){ transform: scale(0.99); }
+    .main-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+    /* ── Status card ── */
+    .status-card { display: none; }
+    .status-card.visible { display: block; }
+
+    .status-header {
+      display: flex; align-items: center; gap: 9px;
+      font-size: 14px; font-weight: 600; color: #94a3b8;
+      margin-bottom: 16px;
+    }
+    .spinner {
+      width: 15px; height: 15px;
+      border: 2px solid #334155; border-top-color: #9945FF;
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .stat-box {
+      background: #0f172a; border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .stat-lbl { font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
+    .stat-val { font-size: 19px; font-weight: 700; color: #f1f5f9; }
+    .stat-val.green { color: #14F195; }
+
+    /* ── Result card ── */
+    .result-card { display: none; }
+    .result-card.visible { display: block; }
+
+    .result-header {
+      display: flex; align-items: center; gap: 9px;
+      font-size: 15px; font-weight: 700; color: #14F195;
+      margin-bottom: 20px;
+    }
+    .check-badge {
+      width: 22px; height: 22px;
+      background: #14F195; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 900; color: #0f172a;
+      flex-shrink: 0;
+    }
+
+    .key-block { margin-bottom: 14px; }
+    .key-lbl {
+      font-size: 11px; color: #475569;
+      text-transform: uppercase; letter-spacing: 0.07em;
+      margin-bottom: 6px;
+    }
+    .key-row {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .key-val {
+      flex: 1;
+      font-family: 'Courier New', monospace;
+      font-size: 12.5px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 9px 13px;
+      color: #e2e8f0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      user-select: text;
+    }
+    .key-val.pub { color: #14F195; }
+
+    .icon-btn {
+      background: #334155; border: none; border-radius: 7px;
+      padding: 7px 11px;
+      color: #94a3b8; font-size: 12px; font-weight: 600;
+      cursor: pointer; white-space: nowrap; flex-shrink: 0;
+      transition: background 0.15s, color 0.15s;
+    }
+    .icon-btn:hover { background: #475569; color: #f1f5f9; }
+    .icon-btn.copied { background: #14F195; color: #0f172a; }
+
+    .result-meta {
+      font-size: 12px; color: #475569;
+      margin-bottom: 14px;
+    }
+
+    .save-btn {
+      width: 100%;
+      padding: 11px;
+      background: #172554;
+      border: 1px solid #1d4ed8;
+      border-radius: 10px;
+      color: #93c5fd;
+      font-size: 14px; font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      margin-bottom: 12px;
+    }
+    .save-btn:hover { background: #1e40af; color: #fff; }
+
+    .warning {
+      display: flex; align-items: flex-start; gap: 8px;
+      padding: 11px 14px;
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.25);
+      border-radius: 8px;
+      font-size: 12.5px; color: #fca5a5; line-height: 1.5;
+    }
+
+    .valid-note { font-size: 11px; color: #475569; margin-top: 5px; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <header>
+    <div class="logo">◆</div>
+    <div class="header-text">
+      <h1>Bennett's Vanity Generator</h1>
+      <p>Brute-forces keypairs until the address matches your pattern</p>
+    </div>
+    <a class="twitter-link" href="https://twitter.com/bbennctt" target="_blank">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L1.254 2.25H8.08l4.259 5.63 5.905-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      @bbennctt
+    </a>
+  </header>
+
+  <!-- Config card -->
+  <div class="card" id="config-card">
+    <div class="card-title">Pattern</div>
+
+    <div class="input-row">
+      <div class="field">
+        <label for="pfx">Prefix</label>
+        <input type="text" id="pfx" placeholder="e.g. COOL" maxlength="8" autocomplete="off" spellcheck="false">
+        <div class="err-msg" id="pfx-err"></div>
+      </div>
+      <div class="field">
+        <label for="sfx">Suffix</label>
+        <input type="text" id="sfx" placeholder="e.g. 777" maxlength="8" autocomplete="off" spellcheck="false">
+        <div class="err-msg" id="sfx-err"></div>
+      </div>
+    </div>
+
+    <div class="valid-note" style="margin-bottom:14px;">
+      Valid characters: 1–9, A–H, J–N, P–Z, a–k, m–z &nbsp;(Base58 — no 0, O, I, l)
+    </div>
+
+    <div class="match-preview" id="match-preview"></div>
+
+    <div class="options-row">
+      <div class="toggle-wrap" id="case-toggle">
+        <div class="toggle" id="toggle-ui"></div>
+        Case sensitive
+      </div>
+
+      <div class="threads-wrap">
+        <span>Threads:</span>
+        <div class="stepper">
+          <button class="stepper-btn" id="thr-dn">−</button>
+          <span class="stepper-val" id="thr-val">8</span>
+          <button class="stepper-btn" id="thr-up">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="difficulty" id="diff-box">
+      <div class="diff-dot" id="diff-dot"></div>
+      <div class="diff-text" id="diff-text"></div>
+    </div>
+
+    <button class="main-btn start" id="main-btn" disabled>Start Generating</button>
+  </div>
+
+  <!-- Status card -->
+  <div class="card status-card" id="status-card">
+    <div class="status-header">
+      <div class="spinner"></div>
+      Searching…
+    </div>
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-lbl">Attempts</div>
+        <div class="stat-val" id="s-attempts">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-lbl">Speed</div>
+        <div class="stat-val green" id="s-rate">—</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-lbl">Est. Remaining</div>
+        <div class="stat-val" id="s-eta">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Result card -->
+  <div class="card result-card" id="result-card">
+    <div class="result-header">
+      <div class="check-badge">✓</div>
+      Wallet Found!
+    </div>
+
+    <div class="key-block">
+      <div class="key-lbl">Public Address</div>
+      <div class="key-row">
+        <div class="key-val pub" id="r-addr"></div>
+        <button class="icon-btn" id="copy-addr">Copy</button>
+      </div>
+    </div>
+
+    <div class="key-block">
+      <div class="key-lbl">Private Key (for Phantom import)</div>
+      <div class="key-row">
+        <div class="key-val" id="r-priv" style="filter:blur(5px);transition:filter 0.2s;"></div>
+        <button class="icon-btn" id="show-priv">Show</button>
+        <button class="icon-btn" id="copy-priv">Copy</button>
+      </div>
+    </div>
+
+    <div class="result-meta" id="r-meta"></div>
+
+    <button class="save-btn" id="save-btn">⬇ Save keypair.json</button>
+
+    <div class="warning">
+      <span>⚠</span>
+      <span>Never share your private key or keypair.json with anyone. Whoever has it controls your funds permanently.</span>
+    </div>
+  </div>
+
+</div>
+<script>
+// ── State ───────────────────────────────────────────────────────────────────
+let searching     = false;
+let caseSensitive = false;
+let threadCount   = 4;
+let maxThreads    = 8;
+let difficultyEst = 0;
+let resultData    = null;
+let privRevealed  = false;
+let privB58       = '';
+
+// Base58 alphabet (Solana)
+const B58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+const B58_RE = new RegExp(`^[${B58}]*$`);
+
+// ── DOM refs ─────────────────────────────────────────────────────────────────
+const pfxIn     = document.getElementById('pfx');
+const sfxIn     = document.getElementById('sfx');
+const pfxErr    = document.getElementById('pfx-err');
+const sfxErr    = document.getElementById('sfx-err');
+const caseToggle = document.getElementById('case-toggle');
+const toggleUI   = document.getElementById('toggle-ui');
+const thrDn     = document.getElementById('thr-dn');
+const thrUp     = document.getElementById('thr-up');
+const thrVal    = document.getElementById('thr-val');
+const mainBtn   = document.getElementById('main-btn');
+const diffBox   = document.getElementById('diff-box');
+const diffDot   = document.getElementById('diff-dot');
+const diffText  = document.getElementById('diff-text');
+const matchPrev = document.getElementById('match-preview');
+const statusCard = document.getElementById('status-card');
+const resultCard = document.getElementById('result-card');
+const sAttempts  = document.getElementById('s-attempts');
+const sRate      = document.getElementById('s-rate');
+const sEta       = document.getElementById('s-eta');
+const rAddr     = document.getElementById('r-addr');
+const rPriv     = document.getElementById('r-priv');
+const rMeta     = document.getElementById('r-meta');
+const copyAddr  = document.getElementById('copy-addr');
+const showPriv  = document.getElementById('show-priv');
+const copyPriv  = document.getElementById('copy-priv');
+const saveBtn   = document.getElementById('save-btn');
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function fmtN(n) {
+  if (n >= 1e12) return (n/1e12).toFixed(1)+'T';
+  if (n >= 1e9)  return (n/1e9).toFixed(1)+'B';
+  if (n >= 1e6)  return (n/1e6).toFixed(1)+'M';
+  if (n >= 1e3)  return (n/1e3).toFixed(1)+'K';
+  return n.toLocaleString();
+}
+function fmtRate(r) {
+  if (r >= 1e6) return (r/1e6).toFixed(2)+'M/s';
+  if (r >= 1e3) return Math.round(r/1e3)+'K/s';
+  return r+'/s';
+}
+function fmtTime(s) {
+  if (!isFinite(s) || s <= 0) return '< 1s';
+  if (s < 60)    return `~${Math.round(s)}s`;
+  if (s < 3600)  return `~${Math.round(s/60)}m`;
+  if (s < 86400) return `~${(s/3600).toFixed(1)}h`;
+  return `~${(s/86400).toFixed(1)}d`;
+}
+function invalidChars(str) {
+  return [...new Set([...str].filter(c => !B58.includes(c)))].join('');
+}
+function difficulty(pfx, sfx, cs) {
+  const len = pfx.length + sfx.length;
+  if (len === 0) return 0;
+  return Math.pow(cs ? 58 : 30, len);
+}
+
+// ── Validation & UI updates ──────────────────────────────────────────────────
+function validate() {
+  const pfx = pfxIn.value, sfx = sfxIn.value;
+  let ok = true;
+
+  [{ el: pfxIn, err: pfxErr, val: pfx },
+   { el: sfxIn, err: sfxErr, val: sfx }].forEach(({ el, err, val }) => {
+    if (val && !B58_RE.test(val)) {
+      err.textContent = `Invalid: "${invalidChars(val)}" not in Base58`;
+      el.classList.add('error'); el.classList.remove('ok');
+      ok = false;
+    } else {
+      err.textContent = '';
+      el.classList.remove('error');
+      val ? el.classList.add('ok') : el.classList.remove('ok');
+    }
+  });
+
+  const hasPattern = pfx.length > 0 || sfx.length > 0;
+  mainBtn.disabled = !ok || !hasPattern || searching;
+
+  if (ok && hasPattern) {
+    updateDifficulty(pfx, sfx);
+    updatePreview(pfx, sfx);
+  } else {
+    diffBox.style.display  = 'none';
+    matchPrev.style.display = 'none';
+  }
+}
+
+function updateDifficulty(pfx, sfx) {
+  difficultyEst = difficulty(pfx, sfx, caseSensitive);
+  const rate = threadCount * 160000; // rough estimate per thread
+  const eta  = fmtTime(difficultyEst / rate);
+
+  let color, label;
+  if      (difficultyEst < 1e5)  { color = '#14F195'; label = 'Trivial'; }
+  else if (difficultyEst < 5e6)  { color = '#22d3ee'; label = 'Easy';    }
+  else if (difficultyEst < 3e8)  { color = '#f59e0b'; label = 'Medium';  }
+  else if (difficultyEst < 1e11) { color = '#f97316'; label = 'Hard';    }
+  else                           { color = '#ef4444'; label = 'Very Hard';}
+
+  diffDot.style.background = color;
+  diffText.innerHTML =
+    `<strong>${label}</strong> — ~${fmtN(difficultyEst)} expected attempts &nbsp;·&nbsp; ` +
+    `est. <strong>${eta}</strong> with ${threadCount} thread${threadCount > 1 ? 's' : ''}`;
+  diffBox.style.display = 'flex';
+}
+
+function updatePreview(pfx, sfx) {
+  let html = 'Example: ';
+  if (pfx) html += `<span class="hl">${pfx}</span>`;
+  html += `<span class="dim">${'•'.repeat(Math.max(6, 20 - pfx.length - sfx.length))}</span>`;
+  if (sfx) html += `<span class="hl">${sfx}</span>`;
+  matchPrev.innerHTML = html;
+  matchPrev.style.display = 'block';
+}
+
+// ── Controls ─────────────────────────────────────────────────────────────────
+caseToggle.addEventListener('click', () => {
+  caseSensitive = !caseSensitive;
+  toggleUI.classList.toggle('on', caseSensitive);
+  validate();
+});
+
+thrDn.addEventListener('click', () => {
+  if (threadCount > 1) {
+    threadCount--;
+    thrVal.textContent = threadCount;
+    thrDn.disabled = threadCount <= 1;
+    thrUp.disabled = false;
+    validate();
+  }
+});
+thrUp.addEventListener('click', () => {
+  if (threadCount < maxThreads) {
+    threadCount++;
+    thrVal.textContent = threadCount;
+    thrUp.disabled = threadCount >= maxThreads;
+    thrDn.disabled = false;
+    validate();
+  }
+});
+
+pfxIn.addEventListener('input', validate);
+sfxIn.addEventListener('input', validate);
+
+mainBtn.addEventListener('click', () => searching ? stopSearch() : startSearch());
+
+// ── Search ───────────────────────────────────────────────────────────────────
+async function startSearch() {
+  if (mainBtn.disabled) return;
+  searching = true;
+  resultCard.classList.remove('visible');
+  sAttempts.textContent = '0';
+  sRate.textContent = '—';
+  sEta.textContent  = '—';
+  mainBtn.textContent = 'Stop';
+  mainBtn.className   = 'main-btn stop';
+  mainBtn.disabled    = false;
+  statusCard.classList.add('visible');
+
+  await window.api.startSearch({
+    prefix: pfxIn.value,
+    suffix: sfxIn.value,
+    caseSensitive,
+    threadCount
+  });
+}
+
+async function stopSearch() {
+  searching = false;
+  await window.api.stopSearch();
+  mainBtn.textContent = 'Start Generating';
+  mainBtn.className   = 'main-btn start';
+  statusCard.classList.remove('visible');
+  validate();
+}
+
+// ── Progress / Found ─────────────────────────────────────────────────────────
+window.api.onProgress(({ attempts, rate }) => {
+  sAttempts.textContent = attempts.toLocaleString();
+  sRate.textContent     = fmtRate(rate);
+  if (difficultyEst > 0 && rate > 0) {
+    sEta.textContent = fmtTime((difficultyEst - attempts) / rate);
+  }
+});
+
+window.api.onFound(({ address, secretKey, attempts, elapsed }) => {
+  searching = false;
+  mainBtn.textContent = 'Start Generating';
+  mainBtn.className   = 'main-btn start';
+  statusCard.classList.remove('visible');
+  validate();
+
+  resultData   = { address, secretKey };
+  privRevealed = false;
+  privB58      = encodeB58(new Uint8Array(secretKey));
+
+  rAddr.textContent = address;
+  rPriv.textContent = '•'.repeat(64);
+  rPriv.style.filter = 'blur(5px)';
+  showPriv.textContent = 'Show';
+
+  rMeta.textContent = `Found in ${attempts.toLocaleString()} attempts · ${elapsed}s`;
+
+  resultCard.classList.add('visible');
+  resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+});
+
+// ── Copy / Show / Save ────────────────────────────────────────────────────────
+function flashCopy(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+copyAddr.addEventListener('click', () => resultData && flashCopy(copyAddr, resultData.address));
+
+showPriv.addEventListener('click', () => {
+  privRevealed = !privRevealed;
+  if (privRevealed) {
+    rPriv.textContent  = privB58;
+    rPriv.style.filter = 'none';
+    showPriv.textContent = 'Hide';
+  } else {
+    rPriv.textContent  = '•'.repeat(64);
+    rPriv.style.filter = 'blur(5px)';
+    showPriv.textContent = 'Show';
+  }
+});
+
+copyPriv.addEventListener('click', () => resultData && flashCopy(copyPriv, privB58));
+
+saveBtn.addEventListener('click', async () => {
+  if (!resultData) return;
+  const res = await window.api.saveKeypair({ address: resultData.address, secretKey: resultData.secretKey });
+  if (res.saved) {
+    const orig = saveBtn.textContent;
+    saveBtn.textContent = '✓ Saved!';
+    setTimeout(() => { saveBtn.textContent = orig; }, 3000);
+  }
+});
+
+// ── Base58 encoder (for private key display) ─────────────────────────────────
+function encodeB58(bytes) {
+  let leading = 0;
+  for (const b of bytes) { if (b === 0) leading++; else break; }
+  let n = 0n;
+  for (const b of bytes) n = n * 256n + BigInt(b);
+  let out = '';
+  while (n > 0n) { out = B58[Number(n % 58n)] + out; n /= 58n; }
+  return '1'.repeat(leading) + out;
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+async function init() {
+  maxThreads  = await window.api.getCpuCount();
+  threadCount = Math.max(1, maxThreads - 1);
+  thrVal.textContent = threadCount;
+  thrUp.disabled = threadCount >= maxThreads;
+  thrDn.disabled = threadCount <= 1;
+  validate();
+}
+
+init();
+</script>
+</body>
+</html>

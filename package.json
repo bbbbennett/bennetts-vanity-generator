@@ -1,0 +1,19 @@
+{
+  "name": "solana-vanity-wallet",
+  "version": "1.0.0",
+  "description": "Solana Vanity Wallet Generator",
+  "author": "Bennett",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-packager . \"Bennetts Vanity Generator\" --platform=win32 --arch=x64 --out=dist --overwrite --prune=true --ignore=dist"
+  },
+  "dependencies": {
+    "bs58": "^5.0.0",
+    "tweetnacl": "^1.0.3"
+  },
+  "devDependencies": {
+    "@electron/packager": "^19.0.5",
+    "electron": "^33.0.0"
+  }
+}
