@@ -6,6 +6,14 @@ Built by [@bbennctt](https://twitter.com/bbennctt)
 
 ---
 
+## Screenshots
+
+![Default](screenshots/1-default.png)
+![Pattern](screenshots/2-pattern.png)
+![Result](screenshots/3-result.png)
+
+---
+
 ## Features
 
 - **Prefix & suffix matching** — find an address that starts with, ends with, or both
