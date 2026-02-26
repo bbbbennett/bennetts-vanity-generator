@@ -6,7 +6,7 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-packager . \"Bennetts Vanity Generator\" --platform=win32 --arch=x64 --out=dist --overwrite --prune=true --ignore=dist"
+    "dist": "electron-packager . \"Bennetts Vanity Generator\" --platform=win32 --arch=x64 --out=dist --overwrite --prune=true --ignore=dist --no-asar"
   },
   "dependencies": {
     "bs58": "^5.0.0",
