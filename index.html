@@ -376,7 +376,7 @@
   <div class="card status-card" id="status-card">
     <div class="status-header">
       <div class="spinner"></div>
-      Searching…
+      <span id="status-label">Searching…</span>
     </div>
     <div class="stats-grid">
       <div class="stat-box">
@@ -627,6 +627,11 @@ window.api.onProgress(({ attempts, rate }) => {
   if (difficultyEst > 0 && rate > 0) {
     sEta.textContent = fmtTime((difficultyEst - attempts) / rate);
   }
+});
+
+window.api.onError(msg => {
+  document.getElementById('status-label').textContent = 'Error: ' + msg;
+  document.getElementById('status-label').style.color = '#ef4444';
 });
 
 window.api.onFound(({ address, secretKey, attempts, elapsed }) => {

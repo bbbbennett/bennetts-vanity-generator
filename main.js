@@ -27,6 +27,10 @@ function createWindow() {
     }
   });
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
+  // Press F12 to open DevTools for debugging
+  mainWindow.webContents.on('before-input-event', (e, input) => {
+    if (input.key === 'F12') mainWindow.webContents.openDevTools();
+  });
 }
 
 function stopAllWorkers() {
@@ -79,7 +83,10 @@ ipcMain.handle('start-search', (event, { prefix, suffix, caseSensitive, threadCo
       }
     });
 
-    w.on('error', err => console.error('Worker error:', err));
+    w.on('error', err => {
+      console.error('Worker error:', err);
+      mainWindow?.webContents.send('worker-error', err.message);
+    });
     workers.push(w);
   }
 });
