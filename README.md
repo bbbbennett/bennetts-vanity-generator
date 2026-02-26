@@ -19,11 +19,13 @@ Built by [@bbennctt](https://twitter.com/bbennctt)
 
 ## Download
 
-Grab the latest release from the [Releases](https://github.com/bbbbennett/bennetts-vanity-generator/releases) page. Extract the zip and run `Bennetts Vanity Generator.exe` — no install required.
+Grab the latest release from the [Releases](https://github.com/bbbbennett/bennetts-vanity-generator/releases) page. Extract the zip and run `Bennetts Vanity Generator.exe` — **no install required, no Node.js needed.**
 
 ---
 
 ## Run from Source
+
+> **Note:** This is only needed if you want to edit the code. If you just want to use the app, download the `.exe` above — it works on its own.
 
 Requires [Node.js](https://nodejs.org) 18+.
 
